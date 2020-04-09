@@ -35,9 +35,9 @@ const p5draw = (p) => {
 
     let p5video;
 
-    let createImage, createDistortion;
+    let createImage, createSubtitle;
 
-    let welcome = "subject has agreed to use webcam";
+    let welcome = "subject has agreed to use webcam.";
     let text = "A VERY INTERACTIVE WEBPAGE";
 
     function drawBox(detections) {
@@ -58,7 +58,7 @@ const p5draw = (p) => {
 
     p.setup = () => {
         p.createCanvas(width, height);
-        p.background(255);
+        p.background(0);
 
         p5video = p.createCapture(p.VIDEO);
         p5video.size(width, height);
@@ -77,22 +77,31 @@ const p5draw = (p) => {
         console.log(screenCssPixelRatio);
 
         if (detections) {
-                p.strokeWeight(0);
-                p.fill(255);
-                p.rect(0,0,width,height);
+                p.background(0);
 
                 if(detections.length > 0){
                     const detection = detections[0];
                     const headWidth = detection.alignedRect._box._width;
 
                     textZoom = p.map(headWidth, 250, 700, 15, 130);
-                    textBlur = p.map(headWidth, 250, 700, 0, 0.1);
 
                     createImage = p.createGraphics(width,height-100);
-                    createImage.background = (255);
+
+                    createImage.blendMode(p.BLEND);
+                    createImage.background = (0);
+                    createImage.blendMode(p.SCREEN);
+
                     createImage.push();
+                    createImage.drawingContext.shadowColor = createImage.color(155);
+
+                    if(headWidth < 250){
+                        textBlur = 1;
+                    } else {
+                        textBlur = p.map(headWidth, 250, 700, 1, 100);
+                    }
+                    createImage.drawingContext.shadowBlur = textBlur;
+
                     createImage.textSize(textZoom);
-                    createImage.strokeWeight(0);
                     createImage.fill(0);
                     createImage.textAlign(createImage.CENTER);
                     createImage.text(text, createImage.width/2, createImage.height/2);
@@ -100,32 +109,20 @@ const p5draw = (p) => {
                     createImage.loadPixels();
                     createImage.updatePixels();
 
-                    if(headWidth < 250) {
-                        p.image(createImage, 0, 50);
-                    } else {
-                        for (let i = 0; i < height; i += 1) {
-                            let distort = p.map(p.noise(i * textBlur), 0, 1, 0, 99);
-                            createDistortion = createImage.get(0, i, width, 1);
-                            p.image(createDistortion, distort, i);
-                        }
-                    }
+                    p.image(createImage, 0, 50);
+
+                    // if(headWidth < 250) {
+                        
+                    // } else {
+                    //     for (let i = 0; i < height; i += 1) {
+                    //         let distort = p.map(p.noise(i * textBlur), 0, 1, 0, 99);
+                    //         createDistortion = createImage.get(0, i, width, 1);
+                    //         p.image(createDistortion, distort, i);
+                    //     }
+                    // }
                 }
             }
-
-            p.textSize(50);
-            p.strokeWeight(0);
-            p.typeText(welcome,0,25,50,20);
         }
-
-    p.typeText = (sentence, n, x, y, speed) => {
-        if (n < (sentence.length)) {
-            p.text(sentence.substring(0, n+1), x, y);
-            n++;
-            setTimeout(function() {
-              p.typeText(sentence, n, x, y, speed)
-            }, speed);
-          }
-    }
 }
 
 function setup() {
